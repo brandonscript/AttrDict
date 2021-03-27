@@ -3,12 +3,13 @@
 Common tests that apply to multiple Attr-derived classes.
 """
 import copy
-from collections import namedtuple, Mapping, ItemsView, KeysView, ValuesView
+from collections import namedtuple
+from collections.abc import Mapping, ItemsView, KeysView, ValuesView
 from itertools import chain
 import pickle
 from sys import version_info
 
-from nose.tools import (assert_equals, assert_not_equals,
+from nose.tools import (assert_equal, assert_not_equals,
                         assert_true, assert_false, assert_raises)
 import six
 
@@ -86,7 +87,7 @@ def test_attr():
     Tests for an class that implements Attr.
     """
     for test in common(AttrImpl, mutable=False):
-        yield test
+        return test
 
 
 def test_attrmap():
@@ -96,7 +97,7 @@ def test_attrmap():
     from attrdict.mapping import AttrMap
 
     for test in common(AttrMap, mutable=True):
-        yield test
+        return test
 
 
 def test_attrdict():
@@ -119,7 +120,7 @@ def test_attrdict():
     for test in common(AttrDict, constructor=constructor,
                        mutable=True, iter_methods=True,
                        view_methods=view_methods, recursive=False):
-        yield test
+        return test
 
 
 def test_attrdefault():
@@ -138,7 +139,7 @@ def test_attrdefault():
         return AttrDefault(None, items, sequence_type)
 
     for test in common(AttrDefault, constructor=constructor, mutable=True):
-        yield test
+        return test
 
 
 def common(cls, constructor=None, mutable=False, iter_methods=False,
@@ -177,7 +178,7 @@ def common(cls, constructor=None, mutable=False, iter_methods=False,
     for test in tests:
         test.description = test.__doc__.format(cls=cls.__name__)
 
-        yield test, options
+        return test, options
 
 
 def item_access(options):
@@ -197,59 +198,59 @@ def item_access(options):
     )
 
     # key that can be an attribute
-    assert_equals(mapping['foo'], 'bar')
-    assert_equals(mapping.foo, 'bar')
-    assert_equals(mapping('foo'), 'bar')
-    assert_equals(mapping.get('foo'), 'bar')
+    assert_equal(mapping['foo'], 'bar')
+    assert_equal(mapping.foo, 'bar')
+    assert_equal(mapping('foo'), 'bar')
+    assert_equal(mapping.get('foo'), 'bar')
 
     # key that cannot be an attribute
-    assert_equals(mapping[3], 'three')
+    assert_equal(mapping[3], 'three')
     assert_raises(TypeError, getattr, mapping, 3)
-    assert_equals(mapping(3), 'three')
-    assert_equals(mapping.get(3), 'three')
+    assert_equal(mapping(3), 'three')
+    assert_equal(mapping.get(3), 'three')
 
     # key that cannot be an attribute (sadly)
-    assert_equals(mapping[six.u('👻')], 'boo')
+    assert_equal(mapping[six.u('👻')], 'boo')
     if six.PY2:
         assert_raises(UnicodeEncodeError, getattr, mapping, six.u('👻'))
     else:
         assert_raises(AttributeError, getattr, mapping, six.u('👻'))
-    assert_equals(mapping(six.u('👻')), 'boo')
-    assert_equals(mapping.get(six.u('👻')), 'boo')
+    assert_equal(mapping(six.u('👻')), 'boo')
+    assert_equal(mapping.get(six.u('👻')), 'boo')
 
     # key that represents a hidden attribute
-    assert_equals(mapping['_lorem'], 'ipsum')
+    assert_equal(mapping['_lorem'], 'ipsum')
     assert_raises(AttributeError, lambda: mapping._lorem)
-    assert_equals(mapping('_lorem'), 'ipsum')
-    assert_equals(mapping.get('_lorem'), 'ipsum')
+    assert_equal(mapping('_lorem'), 'ipsum')
+    assert_equal(mapping.get('_lorem'), 'ipsum')
 
     # key that represents an attribute that already exists
-    assert_equals(mapping['get'], 'not the function')
+    assert_equal(mapping['get'], 'not the function')
     assert_not_equals(mapping.get, 'not the function')
-    assert_equals(mapping('get'), 'not the function')
-    assert_equals(mapping.get('get'), 'not the function')
+    assert_equal(mapping('get'), 'not the function')
+    assert_equal(mapping.get('get'), 'not the function')
 
     # does recursion work
     assert_raises(AttributeError, lambda: mapping['sub'].alpha)
-    assert_equals(mapping.sub.alpha, 'bravo')
-    assert_equals(mapping('sub').alpha, 'bravo')
+    assert_equal(mapping.sub.alpha, 'bravo')
+    assert_equal(mapping('sub').alpha, 'bravo')
     assert_raises(AttributeError, lambda: mapping.get('sub').alpha)
 
     # bytes
-    assert_equals(mapping['bytes'], b'bytes')
-    assert_equals(mapping.bytes, b'bytes')
-    assert_equals(mapping('bytes'), b'bytes')
-    assert_equals(mapping.get('bytes'), b'bytes')
+    assert_equal(mapping['bytes'], b'bytes')
+    assert_equal(mapping.bytes, b'bytes')
+    assert_equal(mapping('bytes'), b'bytes')
+    assert_equal(mapping.get('bytes'), b'bytes')
 
     # tuple
-    assert_equals(mapping['tuple'], ({'a': 'b'}, 'c'))
-    assert_equals(mapping.tuple, ({'a': 'b'}, 'c'))
-    assert_equals(mapping('tuple'), ({'a': 'b'}, 'c'))
-    assert_equals(mapping.get('tuple'), ({'a': 'b'}, 'c'))
+    assert_equal(mapping['tuple'], ({'a': 'b'}, 'c'))
+    assert_equal(mapping.tuple, ({'a': 'b'}, 'c'))
+    assert_equal(mapping('tuple'), ({'a': 'b'}, 'c'))
+    assert_equal(mapping.get('tuple'), ({'a': 'b'}, 'c'))
 
     assert_raises(AttributeError, lambda: mapping['tuple'][0].a)
-    assert_equals(mapping.tuple[0].a, 'b')
-    assert_equals(mapping('tuple')[0].a, 'b')
+    assert_equal(mapping.tuple[0].a, 'b')
+    assert_equal(mapping('tuple')[0].a, 'b')
     assert_raises(AttributeError, lambda: mapping.get('tuple')[0].a)
 
     assert_true(isinstance(mapping['tuple'], tuple))
@@ -268,14 +269,14 @@ def item_access(options):
     assert_true(isinstance(mapping.get('tuple')[1], str))
 
     # list
-    assert_equals(mapping['list'], [{'a': 'b'}, {'c': 'd'}])
-    assert_equals(mapping.list, ({'a': 'b'}, {'c': 'd'}))
-    assert_equals(mapping('list'), ({'a': 'b'}, {'c': 'd'}))
-    assert_equals(mapping.get('list'), [{'a': 'b'}, {'c': 'd'}])
+    assert_equal(mapping['list'], [{'a': 'b'}, {'c': 'd'}])
+    assert_equal(mapping.list, ({'a': 'b'}, {'c': 'd'}))
+    assert_equal(mapping('list'), ({'a': 'b'}, {'c': 'd'}))
+    assert_equal(mapping.get('list'), [{'a': 'b'}, {'c': 'd'}])
 
     assert_raises(AttributeError, lambda: mapping['list'][0].a)
-    assert_equals(mapping.list[0].a, 'b')
-    assert_equals(mapping('list')[0].a, 'b')
+    assert_equal(mapping.list[0].a, 'b')
+    assert_equal(mapping('list')[0].a, 'b')
     assert_raises(AttributeError, lambda: mapping.get('list')[0].a)
 
     assert_true(isinstance(mapping['list'], list))
@@ -297,8 +298,8 @@ def item_access(options):
     assert_raises(KeyError, lambda: mapping['fake'])
     assert_raises(AttributeError, lambda: mapping.fake)
     assert_raises(AttributeError, lambda: mapping('fake'))
-    assert_equals(mapping.get('fake'), None)
-    assert_equals(mapping.get('fake', 'bake'), 'bake')
+    assert_equal(mapping.get('fake'), None)
+    assert_equal(mapping.get('fake', 'bake'), 'bake')
 
 
 def iteration(options):
@@ -313,7 +314,7 @@ def iteration(options):
         (('foo', 'bar'), ('lorem', 'ipsum'), ('alpha', 'bravo'))
     )
 
-    assert_equals(set(iter(mapping)), expected_keys)
+    assert_equal(set(iter(mapping)), expected_keys)
 
     actual_keys = mapping.keys()
     actual_values = mapping.values()
@@ -323,9 +324,9 @@ def iteration(options):
         for collection in (actual_keys, actual_values, actual_items):
             assert_true(isinstance(collection, list))
 
-        assert_equals(frozenset(actual_keys), expected_keys)
-        assert_equals(frozenset(actual_values), expected_values)
-        assert_equals(frozenset(actual_items), expected_items)
+        assert_equal(frozenset(actual_keys), expected_keys)
+        assert_equal(frozenset(actual_values), expected_values)
+        assert_equal(frozenset(actual_items), expected_items)
 
         if options.iter_methods:
             actual_keys = mapping.iterkeys()
@@ -335,9 +336,9 @@ def iteration(options):
             for iterable in (actual_keys, actual_values, actual_items):
                 assert_false(isinstance(iterable, list))
 
-            assert_equals(frozenset(actual_keys), expected_keys)
-            assert_equals(frozenset(actual_values), expected_values)
-            assert_equals(frozenset(actual_items), expected_items)
+            assert_equal(frozenset(actual_keys), expected_keys)
+            assert_equal(frozenset(actual_values), expected_values)
+            assert_equal(frozenset(actual_items), expected_items)
 
         if options.view_methods:
             actual_keys = mapping.viewkeys()
@@ -348,9 +349,9 @@ def iteration(options):
             for iterable in (actual_keys, actual_values, actual_items):
                 assert_false(isinstance(iterable, list))
 
-            assert_equals(frozenset(actual_keys), expected_keys)
-            assert_equals(frozenset(actual_values), expected_values)
-            assert_equals(frozenset(actual_items), expected_items)
+            assert_equal(frozenset(actual_keys), expected_keys)
+            assert_equal(frozenset(actual_values), expected_values)
+            assert_equal(frozenset(actual_items), expected_items)
 
             # What happens if mapping isn't a dict
             from attrdict.mapping import AttrMap
@@ -365,22 +366,22 @@ def iteration(options):
             for iterable in (actual_keys, actual_values, actual_items):
                 assert_false(isinstance(iterable, list))
 
-            assert_equals(frozenset(actual_keys), expected_keys)
-            assert_equals(frozenset(actual_values), expected_values)
-            assert_equals(frozenset(actual_items), expected_items)
+            assert_equal(frozenset(actual_keys), expected_keys)
+            assert_equal(frozenset(actual_values), expected_values)
+            assert_equal(frozenset(actual_items), expected_items)
 
     else:  # methods are actually views
         assert_true(isinstance(actual_keys, KeysView))
-        assert_equals(frozenset(actual_keys), expected_keys)
+        assert_equal(frozenset(actual_keys), expected_keys)
 
         assert_true(isinstance(actual_values, ValuesView))
-        assert_equals(frozenset(actual_values), expected_values)
+        assert_equal(frozenset(actual_values), expected_values)
 
         assert_true(isinstance(actual_items, ItemsView))
-        assert_equals(frozenset(actual_items), expected_items)
+        assert_equal(frozenset(actual_items), expected_items)
 
     # make sure empty iteration works
-    assert_equals(tuple(options.constructor().items()), ())
+    assert_equal(tuple(options.constructor().items()), ())
 
 
 def containment(options):
@@ -405,9 +406,9 @@ def containment(options):
 
 def length(options):
     "Get the length of an {cls} instance"
-    assert_equals(len(options.constructor()), 0)
-    assert_equals(len(options.constructor({'foo': 'bar'})), 1)
-    assert_equals(len(options.constructor({'foo': 'bar', 'baz': 'qux'})), 2)
+    assert_equal(len(options.constructor()), 0)
+    assert_equal(len(options.constructor({'foo': 'bar'})), 1)
+    assert_equal(len(options.constructor({'foo': 'bar', 'baz': 'qux'})), 2)
 
 
 def equality(options):
@@ -492,17 +493,17 @@ def item_creation(options):
         # key that can be an attribute
         mapping.foo = 'bar'
 
-        assert_equals(mapping.foo, 'bar')
-        assert_equals(mapping['foo'], 'bar')
-        assert_equals(mapping('foo'), 'bar')
-        assert_equals(mapping.get('foo'), 'bar')
+        assert_equal(mapping.foo, 'bar')
+        assert_equal(mapping['foo'], 'bar')
+        assert_equal(mapping('foo'), 'bar')
+        assert_equal(mapping.get('foo'), 'bar')
 
         mapping['baz'] = 'qux'
 
-        assert_equals(mapping.baz, 'qux')
-        assert_equals(mapping['baz'], 'qux')
-        assert_equals(mapping('baz'), 'qux')
-        assert_equals(mapping.get('baz'), 'qux')
+        assert_equal(mapping.baz, 'qux')
+        assert_equal(mapping['baz'], 'qux')
+        assert_equal(mapping('baz'), 'qux')
+        assert_equal(mapping.get('baz'), 'qux')
 
         # key that cannot be an attribute
         assert_raises(TypeError, setattr, mapping, 1, 'one')
@@ -511,9 +512,9 @@ def item_creation(options):
 
         mapping[2] = 'two'
 
-        assert_equals(mapping[2], 'two')
-        assert_equals(mapping(2), 'two')
-        assert_equals(mapping.get(2), 'two')
+        assert_equal(mapping[2], 'two')
+        assert_equal(mapping(2), 'two')
+        assert_equal(mapping.get(2), 'two')
 
         # key that represents a hidden attribute
         def add_foo():
@@ -530,9 +531,9 @@ def item_creation(options):
             return mapping._baz
 
         assert_raises(AttributeError, get_baz)
-        assert_equals(mapping['_baz'], 'qux')
-        assert_equals(mapping('_baz'), 'qux')
-        assert_equals(mapping.get('_baz'), 'qux')
+        assert_equal(mapping['_baz'], 'qux')
+        assert_equal(mapping('_baz'), 'qux')
+        assert_equal(mapping.get('_baz'), 'qux')
 
         # key that represents an attribute that already exists
         def add_get():
@@ -545,24 +546,24 @@ def item_creation(options):
         mapping['get'] = 'value'
 
         assert_not_equals(mapping.get, 'value')
-        assert_equals(mapping['get'], 'value')
-        assert_equals(mapping('get'), 'value')
-        assert_equals(mapping.get('get'), 'value')
+        assert_equal(mapping['get'], 'value')
+        assert_equal(mapping('get'), 'value')
+        assert_equal(mapping.get('get'), 'value')
 
         # rewrite a value
         mapping.foo = 'manchu'
 
-        assert_equals(mapping.foo, 'manchu')
-        assert_equals(mapping['foo'], 'manchu')
-        assert_equals(mapping('foo'), 'manchu')
-        assert_equals(mapping.get('foo'), 'manchu')
+        assert_equal(mapping.foo, 'manchu')
+        assert_equal(mapping['foo'], 'manchu')
+        assert_equal(mapping('foo'), 'manchu')
+        assert_equal(mapping.get('foo'), 'manchu')
 
         mapping['bar'] = 'bell'
 
-        assert_equals(mapping.bar, 'bell')
-        assert_equals(mapping['bar'], 'bell')
-        assert_equals(mapping('bar'), 'bell')
-        assert_equals(mapping.get('bar'), 'bell')
+        assert_equal(mapping.bar, 'bell')
+        assert_equal(mapping['bar'], 'bell')
+        assert_equal(mapping('bar'), 'bell')
+        assert_equal(mapping.get('bar'), 'bell')
 
         if options.recursive:
             recursed = options.constructor({'foo': {'bar': 'baz'}})
@@ -570,7 +571,7 @@ def item_creation(options):
             recursed.foo.bar = 'qux'
             recursed.foo.alpha = 'bravo'
 
-            assert_equals(recursed, {'foo': {'bar': 'qux', 'alpha': 'bravo'}})
+            assert_equal(recursed, {'foo': {'bar': 'qux', 'alpha': 'bravo'}})
 
 
 def item_deletion(options):
@@ -596,9 +597,9 @@ def item_deletion(options):
 
         assert_raises(TypeError, item, mapping)
 
-        assert_equals(mapping, {'foo': 'bar'})
-        assert_equals(mapping.foo, 'bar')
-        assert_equals(mapping['foo'], 'bar')
+        assert_equal(mapping, {'foo': 'bar'})
+        assert_equal(mapping.foo, 'bar')
+        assert_equal(mapping['foo'], 'bar')
     else:
         mapping = options.constructor(
             {'foo': 'bar', 'lorem': 'ipsum', '_hidden': True, 'get': 'value'}
@@ -648,18 +649,18 @@ def sequence_typing(options):
     tuple_mapping = options.constructor(data)
 
     assert_true(isinstance(tuple_mapping.list, tuple))
-    assert_equals(tuple_mapping.list[0].foo, 'bar')
+    assert_equal(tuple_mapping.list[0].foo, 'bar')
 
     assert_true(isinstance(tuple_mapping.tuple, tuple))
-    assert_equals(tuple_mapping.tuple[0].foo, 'bar')
+    assert_equal(tuple_mapping.tuple[0].foo, 'bar')
 
     list_mapping = options.constructor(data, sequence_type=list)
 
     assert_true(isinstance(list_mapping.list, list))
-    assert_equals(list_mapping.list[0].foo, 'bar')
+    assert_equal(list_mapping.list[0].foo, 'bar')
 
     assert_true(isinstance(list_mapping.tuple, list))
-    assert_equals(list_mapping.tuple[0].foo, 'bar')
+    assert_equal(list_mapping.tuple[0].foo, 'bar')
 
     none_mapping = options.constructor(data, sequence_type=None)
 
@@ -703,25 +704,25 @@ def addition(options):
     assert_raises(TypeError, lambda: constructor() + 1)
     assert_raises(TypeError, lambda: 1 + constructor())
 
-    assert_equals(constructor() + constructor(), {})
-    assert_equals(constructor() + {}, {})
-    assert_equals({} + constructor(), {})
+    assert_equal(constructor() + constructor(), {})
+    assert_equal(constructor() + {}, {})
+    assert_equal({} + constructor(), {})
 
-    assert_equals(constructor(left) + constructor(), left)
-    assert_equals(constructor(left) + {}, left)
-    assert_equals({} + constructor(left), left)
+    assert_equal(constructor(left) + constructor(), left)
+    assert_equal(constructor(left) + {}, left)
+    assert_equal({} + constructor(left), left)
 
-    assert_equals(constructor() + constructor(left), left)
-    assert_equals(constructor() + left, left)
-    assert_equals(left + constructor(), left)
+    assert_equal(constructor() + constructor(left), left)
+    assert_equal(constructor() + left, left)
+    assert_equal(left + constructor(), left)
 
-    assert_equals(constructor(left) + constructor(right), merged)
-    assert_equals(constructor(left) + right, merged)
-    assert_equals(left + constructor(right), merged)
+    assert_equal(constructor(left) + constructor(right), merged)
+    assert_equal(constructor(left) + right, merged)
+    assert_equal(left + constructor(right), merged)
 
-    assert_equals(constructor(right) + constructor(left), opposite)
-    assert_equals(constructor(right) + left, opposite)
-    assert_equals(right + constructor(left), opposite)
+    assert_equal(constructor(right) + constructor(left), opposite)
+    assert_equal(constructor(right) + left, opposite)
+    assert_equal(right + constructor(left), opposite)
 
     # test sequence type changes
     data = {'sequence': [{'foo': 'bar'}]}
@@ -753,8 +754,8 @@ def to_kwargs(options):
 
     expected = {'foo': 1, 'bar': 2}
 
-    assert_equals(return_results(**options.constructor()), {})
-    assert_equals(return_results(**options.constructor(expected)), expected)
+    assert_equal(return_results(**options.constructor()), {})
+    assert_equal(return_results(**options.constructor(expected)), expected)
 
 
 def check_pickle_roundtrip(source, options, **kwargs):
@@ -768,7 +769,7 @@ def check_pickle_roundtrip(source, options, **kwargs):
 
     assert_true(isinstance(loaded, options.cls))
 
-    assert_equals(source, loaded)
+    assert_equal(source, loaded)
 
     return loaded
 
@@ -777,10 +778,10 @@ def pickling(options):
     "Pickle {cls}"
 
     empty = check_pickle_roundtrip(None, options)
-    assert_equals(empty, {})
+    assert_equal(empty, {})
 
     mapping = check_pickle_roundtrip({'foo': 'bar'}, options)
-    assert_equals(mapping, {'foo': 'bar'})
+    assert_equal(mapping, {'foo': 'bar'})
 
     # make sure sequence_type is preserved
     raw = {'list': [{'a': 'b'}], 'tuple': ({'a': 'b'},)}
@@ -810,16 +811,16 @@ def pop(options):
     mapping = options.constructor({'foo': 'bar', 'baz': 'qux'})
 
     assert_raises(KeyError, lambda: mapping.pop('lorem'))
-    assert_equals(mapping.pop('lorem', 'ipsum'), 'ipsum')
-    assert_equals(mapping, {'foo': 'bar', 'baz': 'qux'})
+    assert_equal(mapping.pop('lorem', 'ipsum'), 'ipsum')
+    assert_equal(mapping, {'foo': 'bar', 'baz': 'qux'})
 
-    assert_equals(mapping.pop('baz'), 'qux')
+    assert_equal(mapping.pop('baz'), 'qux')
     assert_false('baz' in mapping)
-    assert_equals(mapping, {'foo': 'bar'})
+    assert_equal(mapping, {'foo': 'bar'})
 
-    assert_equals(mapping.pop('foo', 'qux'), 'bar')
+    assert_equal(mapping.pop('foo', 'qux'), 'bar')
     assert_false('foo' in mapping)
-    assert_equals(mapping, {})
+    assert_equal(mapping, {})
 
 
 def popitem(options):
@@ -832,10 +833,10 @@ def popitem(options):
     for _ in range(3):
         key, value = mapping.popitem()
 
-        assert_equals(expected[key], value)
+        assert_equal(expected[key], value)
         actual[key] = value
 
-    assert_equals(expected, actual)
+    assert_equal(expected, actual)
 
     assert_raises(AttributeError, lambda: mapping.foo)
     assert_raises(AttributeError, lambda: mapping.lorem)
@@ -852,7 +853,7 @@ def clear(options):
 
     mapping.clear()
 
-    assert_equals(mapping, {})
+    assert_equal(mapping, {})
 
     assert_raises(AttributeError, lambda: mapping.foo)
     assert_raises(AttributeError, lambda: mapping.lorem)
@@ -865,18 +866,18 @@ def update(options):
     mapping = options.constructor({'foo': 'bar', 'alpha': 'bravo'})
 
     mapping.update(alpha='beta', lorem='ipsum')
-    assert_equals(mapping, {'foo': 'bar', 'alpha': 'beta', 'lorem': 'ipsum'})
+    assert_equal(mapping, {'foo': 'bar', 'alpha': 'beta', 'lorem': 'ipsum'})
 
     mapping.update({'foo': 'baz', 1: 'one'})
-    assert_equals(
+    assert_equal(
         mapping,
         {'foo': 'baz', 'alpha': 'beta', 'lorem': 'ipsum', 1: 'one'}
     )
 
-    assert_equals(mapping.foo, 'baz')
-    assert_equals(mapping.alpha, 'beta')
-    assert_equals(mapping.lorem, 'ipsum')
-    assert_equals(mapping(1), 'one')
+    assert_equal(mapping.foo, 'baz')
+    assert_equal(mapping.alpha, 'beta')
+    assert_equal(mapping.lorem, 'ipsum')
+    assert_equal(mapping(1), 'one')
 
 
 def setdefault(options):
@@ -884,25 +885,25 @@ def setdefault(options):
 
     mapping = options.constructor({'foo': 'bar'})
 
-    assert_equals(mapping.setdefault('foo', 'baz'), 'bar')
-    assert_equals(mapping.foo, 'bar')
+    assert_equal(mapping.setdefault('foo', 'baz'), 'bar')
+    assert_equal(mapping.foo, 'bar')
 
-    assert_equals(mapping.setdefault('lorem', 'ipsum'), 'ipsum')
-    assert_equals(mapping.lorem, 'ipsum')
+    assert_equal(mapping.setdefault('lorem', 'ipsum'), 'ipsum')
+    assert_equal(mapping.lorem, 'ipsum')
 
     assert_true(mapping.setdefault('return_none') is None)
     assert_true(mapping.return_none is None)
 
-    assert_equals(mapping.setdefault(1, 'one'), 'one')
-    assert_equals(mapping[1], 'one')
+    assert_equal(mapping.setdefault(1, 'one'), 'one')
+    assert_equal(mapping[1], 'one')
 
-    assert_equals(mapping.setdefault('_hidden', 'yes'), 'yes')
+    assert_equal(mapping.setdefault('_hidden', 'yes'), 'yes')
     assert_raises(AttributeError, lambda: mapping._hidden)
-    assert_equals(mapping['_hidden'], 'yes')
+    assert_equal(mapping['_hidden'], 'yes')
 
-    assert_equals(mapping.setdefault('get', 'value'), 'value')
+    assert_equal(mapping.setdefault('get', 'value'), 'value')
     assert_not_equals(mapping.get, 'value')
-    assert_equals(mapping['get'], 'value')
+    assert_equal(mapping['get'], 'value')
 
 
 def copying(options):
@@ -913,8 +914,8 @@ def copying(options):
 
     mapping_b.foo.lorem = 'ipsum'
 
-    assert_equals(mapping_a, mapping_b)
-    assert_equals(mapping_b, mapping_c)
+    assert_equal(mapping_a, mapping_b)
+    assert_equal(mapping_b, mapping_c)
 
     mapping_c.alpha = 'bravo'
 
@@ -928,13 +929,13 @@ def deepcopying(options):
     mapping_b['foo']['lorem'] = 'ipsum'
 
     assert_not_equals(mapping_a, mapping_b)
-    assert_equals(mapping_b, mapping_c)
+    assert_equal(mapping_b, mapping_c)
 
     mapping_c.alpha = 'bravo'
 
     assert_not_equals(mapping_a, mapping_b)
-    assert_equals(mapping_b, mapping_c)
+    assert_equal(mapping_b, mapping_c)
 
     assert_false('lorem' in mapping_a.foo)
-    assert_equals(mapping_a.setdefault('alpha', 'beta'), 'beta')
-    assert_equals(mapping_c.alpha, 'bravo')
+    assert_equal(mapping_a.setdefault('alpha', 'beta'), 'beta')
+    assert_equal(mapping_c.alpha, 'bravo')

@@ -1,7 +1,7 @@
 """
 Tests for the AttrDefault class.
 """
-from nose.tools import assert_equals, assert_raises
+from nose.tools import assert_equal, assert_raises
 
 
 def test_invalid_attributes():
@@ -21,13 +21,13 @@ def test_invalid_attributes():
 
     assert_raises(TypeError, assign)
     assert_raises(AttributeError, lambda: mapping._key)
-    assert_equals(mapping, {})
+    assert_equal(mapping, {})
 
     mapping._setattr('_allow_invalid_attributes', True)
 
     assign()
-    assert_equals(mapping._key, 'value')
-    assert_equals(mapping, {})
+    assert_equal(mapping._key, 'value')
+    assert_equal(mapping, {})
 
     # delete the attribute
     def delete():
@@ -38,20 +38,20 @@ def test_invalid_attributes():
 
     delete()
     assert_raises(AttributeError, lambda: mapping._key)
-    assert_equals(mapping, {})
+    assert_equal(mapping, {})
 
     # now with disallowing invalid
     assign()
     mapping._setattr('_allow_invalid_attributes', False)
 
     assert_raises(TypeError, delete)
-    assert_equals(mapping._key, 'value')
-    assert_equals(mapping, {})
+    assert_equal(mapping._key, 'value')
+    assert_equal(mapping, {})
 
     # force delete
     mapping._delattr('_key')
     assert_raises(AttributeError, lambda: mapping._key)
-    assert_equals(mapping, {})
+    assert_equal(mapping, {})
 
 
 def test_constructor():

@@ -1,7 +1,7 @@
 """
 Test the merge function
 """
-from nose.tools import assert_equals
+from nose.tools import assert_equal
 
 
 def test_merge():
@@ -21,10 +21,10 @@ def test_merge():
         'sub': {'alpha': 'bravo', 3: 4},
     }
 
-    assert_equals(merge({}, {}), {})
-    assert_equals(merge(left, {}), left)
-    assert_equals(merge({}, right), right)
-    assert_equals(
+    assert_equal(merge({}, {}), {})
+    assert_equal(merge(left, {}), left)
+    assert_equal(merge({}, right), right)
+    assert_equal(
         merge(left, right),
         {
             'baz': 'qux',
